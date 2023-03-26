@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D стаканчик с крышкой</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        #container {
+            width: 400px;
+            height: 400px;
+            background-color: #ffffff;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container"></div>
+    <script>
+        // Получаем контейнер
+        const container = document.getElementById("container");
+
+        // Создаем сцену
+        const scene = new THREE.Scene();
+
+        // Создаем камеру
+        const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+
+        // Создаем рендерер
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+
+        // Добавляем рендерер в контейнер
+        container.appendChild(renderer.domElement);
+
+        // Создаем геометрию стаканчика
+        const cupGeometry = new THREE.CylinderGeometry(1, 1, 2, 20);
+
+        // Создаем материал стаканчика
+        const cupMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+        // Создаем меш стаканчика
+        const cupMesh = new THREE.Mesh(cupGeometry, cupMaterial);
+
+        // Добавляем меш стаканчика в сцену
+        scene.add(cupMesh);
+
+        // Создаем геометрию крышки
+        const lidGeometry = new THREE.CylinderGeometry(0.8, 0.8, 0.2, 20);
+
+        // Создаем материал крышки
+        const lidMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+        // Создаем меш крышки
+        const lidMesh = new THREE.Mesh(lidGeometry, lidMaterial);
+
+        // Устанавливаем позицию крышки
+        lidMesh.position.y = 1.5;
+
+        // Добавляем меш крышки в сцену
+        scene.add(lidMesh);
+
+        // Устанавливаем позицию камеры
+        camera.position.z = 5;
+
+        // Устанавливаем направление камеры на сцену
+        camera.lookAt(scene.position);
+
+        // Добавляем обработчик событий мыши
+        let isDragging = false;
+        let previousMousePosition = {
+            x: 0,
+            y: 0
+        };
+        container.addEventListener('mousedown', event => {
+            isDragging = true;
+        });
+
+        container.addEventListener('mousemove', event => {
+            if (!isDragging) {
+                return;
+            }
+
+            const deltaMove = {
+                x: event.offsetX - previousMousePosition.x,
+                y: event.offsetY - previousMousePosition.y
+            };
+
+            const deltaRotationQuaternion = new THREE.Quaternion()
+                .setFromEuler(new THREE.Euler(
+                    toRadians(deltaMove.y * 1), // Yaw
+                    toRadians(deltaMove.x * 1), // Pitch
+                    0, // Roll
+                    'XYZ'
+                ));
+
+            camera.quaternion.multiplyQuaternions(deltaRotationQuaternion, camera.quaternion);
+            camera.lookAt(scene.position);
+
+            previousMousePosition = {
+                x: event.offsetX,
+                y: event.offsetY
+            };
+        });
+
+        document.addEventListener('mouseup', event => {
+            isDragging = false;
+        });
+
+        function toRadians(degrees) {
+            return degrees * Math.PI / 180;
+        }
+
+        // Функция анимации
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Вращаем меш стаканчика
+            cupMesh.rotation.y += 0.01;
+
+            // Вращаем меш крышки
+            lidMesh.rotation.y += 0.01;
+
+            // Рендерим сцену
+            renderer.render(scene, camera);
+        }
+
+        // Запускаем анимацию
+        animate();
+    </script>
+</body>
+
+</html>
